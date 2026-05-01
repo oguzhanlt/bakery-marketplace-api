@@ -43,3 +43,13 @@ class Order(Base):
 	customer = relationship("User", back_populates="customer_orders",foreign_keys=[user_id])
 
 	owner = relationship("User", back_populates="bakery_orders", foreign_keys=[owner_id])
+
+class Bakery(Base):
+	__tablename__ = "bakeries"
+
+	id=Column(Integer, primary_key=True, index=True)
+	name=Column(String, nullable=False)
+	description=Column(String)
+	location=Column(String)
+
+	owner_id = Column(Integer, ForeignKey("users.id"))

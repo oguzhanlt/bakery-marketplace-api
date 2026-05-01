@@ -19,3 +19,9 @@ class UserLogin(BaseModel):
 
 class OrderStatusUpdate(BaseModel):
 	status: OrderStatus
+
+
+class BakeryCreate(BaseModel):
+	name: str
+	description: str
+	location: str
