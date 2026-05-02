@@ -28,21 +28,21 @@ class User(Base):
 	
 	customer_orders = relationship("Order", back_populates="customer", foreign_keys="Order.user_id")
 
-	bakery_orders = relationship("Order", back_populates="owner", foreign_keys="Order.owner_id")
+	bakeries = relationship("Bakery", back_populates="owner")
 
 class Order(Base):
 	__tablename__ = "orders"
 
 	id = Column(Integer, primary_key=True, index=True)
 	item_name = Column(String, nullable=False)
-	user_id = Column(Integer, ForeignKey("users.id"))#customer ordered
-	owner_id = Column(Integer, ForeignKey("users.id"))#bakery received
+	user_id = Column(Integer, ForeignKey("users.id"), nullable=False)#customer ordered
+	bakery_id = Column(Integer, ForeignKey("bakeries.id"), nullable=False)#bakery received
 	created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 	status = Column(Enum(OrderStatus), nullable=False, default=OrderStatus.pending)
 
 	customer = relationship("User", back_populates="customer_orders",foreign_keys=[user_id])
 
-	owner = relationship("User", back_populates="bakery_orders", foreign_keys=[owner_id])
+	bakery  = relationship("Bakery", back_populates="orders")
 
 class Bakery(Base):
 	__tablename__ = "bakeries"
@@ -53,3 +53,6 @@ class Bakery(Base):
 	location=Column(String)
 
 	owner_id = Column(Integer, ForeignKey("users.id"))
+
+	owner = relationship("User", back_populates="bakeries")
+	orders = relationship("Order", back_populates="bakery")

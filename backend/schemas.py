@@ -10,7 +10,7 @@ class UserCreate(BaseModel):
 
 class OrderCreate(BaseModel):
 	item_name: str
-	owner_id: int
+	bakery_id: int
 
 class UserLogin(BaseModel):
 	email: str

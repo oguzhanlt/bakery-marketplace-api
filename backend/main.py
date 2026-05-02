@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from .database import engine, Base
 from . import models
 from .database import SessionLocal
-from .schemas import UserCreate, OrderCreate, UserLogin, OrderStatusUpdate
-from .models import User, Order
+from .schemas import UserCreate, OrderCreate, UserLogin, OrderStatusUpdate, BakeryCreate
+from .models import User, Order, Bakery
 from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta
@@ -140,7 +140,7 @@ def update_user(user_id: int, updated_user: UserCreate):
 def create_order(order: OrderCreate, current_user: dict = Depends(get_current_user)):
 	db = SessionLocal()
 	
-	new_order = Order(item_name=order.item_name, user_id=current_user["user_id"], owner_id = order.owner_id)
+	new_order = Order(item_name=order.item_name, user_id=current_user["user_id"], bakery_id = order.bakery_id)
 	
 	db.add(new_order)
 	db.commit()
@@ -212,7 +212,7 @@ def update_order_status(order_id: int, status_update: OrderStatusUpdate, current
 	if not order:
 		db.close()
 		raise HTTPException(status_code=404, detail="Order not found")
-	if order.owner_id != current_user["user_id"]:
+	if order.bakery.owner_id != current_user["user_id"]: # I would like to note that this is not a good design principle
 		db.close()
 		raise HTTPException(status_code=403, detail="Not your order")
 
@@ -231,11 +231,29 @@ def get_incoming_orders(current_user: dict = Depends(get_current_user)):
 	if current_user["role"] != "bakery_owner":
 		raise HTTPException(status_code = 403)
 
-	orders = db.query(Order).filter(Order.owner_id == current_user["user_id"]).all()
+	orders = db.query(Order).join(Bakery).filter(Bakery.owner_id == current_user["user_id"]).all()
 
 	db.close()
 
 	return orders
 
-#@app.post("/bakery")
-#def create_bakery():
+@app.post("/bakery")
+def create_bakery(bakery: BakeryCreate, current_user: dict = Depends(get_current_user)):
+	db = SessionLocal()
+
+	if current_user["role"] != "bakery_owner":
+		db.close()
+		raise HTTPException(status_code = 403)
+
+	new_bakery = Bakery(name = bakery.name, description= bakery.description,
+		 location = bakery.location, owner_id=current_user["user_id"])
+
+	db.add(new_bakery)
+	db.commit()
+	db.refresh(new_bakery)
+	db.close()	
+	
+	return new_bakery
+	
+	
+	
