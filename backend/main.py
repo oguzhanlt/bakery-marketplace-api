@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from .database import engine, Base
 from . import models
 from .database import SessionLocal
-from .schemas import UserCreate, OrderCreate, UserLogin, OrderStatusUpdate, BakeryCreate
-from .models import User, Order, Bakery
+from .schemas import UserCreate, OrderCreate, UserLogin, OrderStatusUpdate, BakeryCreate, MenuItemCreate
+from .models import User, Order, Bakery, MenuItem
 from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta
@@ -195,8 +195,33 @@ def get_my_orders(current_user: dict = Depends(get_current_user)):
 
 	return orders
 
-#@app.post("/menu-items")
-#def create_menu_item()
+def get_bakeries(user_id : Int):
+	db = LocalSession()
+
+	bakeries = db.query(Bakery).filter(Bakery.user_id == user_id).all()
+	db.close()
+	return bakeries
+
+@app.post("/menu-items")
+def create_menu_item(current_user: dict = Depends(get_current_user), menuitem: MenuItemCreate):
+	db = SessionLocal
+	
+	if current_user["role"]!= "bakery_owner":
+		db.close()
+		raise HTTPException(status_code=403
+
+	if menuitem.bakery_id not in get_bakeries(current_user["user_id"]):
+		db.close()
+		raise HTTPException(status_code=403, detail="Not your bakery")
+
+	new_menuitem = MenuItem(name=menuitem.name, description = menuitem.description, price=menuitem.price)
+
+	db.add((new_menuitem)
+	db.commit()
+	db.refresh(new_menuitem)
+	db.close()
+	
+	return new_menuitem
 
 
 @app.put("/orders/{order_id}/status")

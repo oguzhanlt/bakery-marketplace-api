@@ -56,3 +56,18 @@ class Bakery(Base):
 
 	owner = relationship("User", back_populates="bakeries")
 	orders = relationship("Order", back_populates="bakery")
+
+	menu_items = relationship("MenuItem", back_populates="bakery")
+
+class MenuItem(Base):
+	__tablename__ = "menu_items"
+
+	id = Column(Integer, primary_key=True, index=True)
+	bakery_id = Column(Integer, ForeignKey("bakeries.id"), nullable=False)
+	name = Column(String, nullable=False)
+	description= Column(String
+	price=Column(Integer, nullable=False)
+
+	bakery = relationship("Bakery", back_populates="menu_items")
+
+	

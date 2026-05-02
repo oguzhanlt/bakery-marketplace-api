@@ -25,3 +25,10 @@ class BakeryCreate(BaseModel):
 	name: str
 	description: str
 	location: str
+
+
+class MenuItemCreate(BaseModel:
+	bakery_id: int
+	name: str
+	description: str
+	price: int
