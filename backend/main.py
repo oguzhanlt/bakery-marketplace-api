@@ -156,7 +156,7 @@ def create_order(order: OrderCreate, current_user: dict = Depends(get_current_us
 		db.close()
 		raise HTTPException(status_code = 404, detail = "Menu item not found")
 
-	new_order = Order(menu_item_id=menu_item.id, user_id=current_user["user_id"], bakery_id = order.bakery_id, quantity=order.quantity)
+	new_order = Order(menu_item_id=menu_item.id, user_id=current_user["user_id"], bakery_id = order.bakery_id, quantity=order.quantity, price_at_order = menu_item.price)
 	
 	db.add(new_order)
 	db.commit()
@@ -205,10 +205,23 @@ def get_my_orders(current_user: dict = Depends(get_current_user)):
 		raise HTTPException(status_code=403)
 
 	orders = db.query(Order).filter(Order.user_id == current_user["user_id"]).all()
+	
+	result = []
+
+	for order in orders:
+        	result.append({
+            	"order_id": order.id,
+		"bakery": order.bakery.name,
+		"menu_item": order.menu_item.name,
+            	"quantity": order.quantity,
+            	"status": order.status,
+            	"created_at": order.created_at,
+		"price_at_order": order.price_at_order,
+		"total_price": order.price_at_order * order.quantity})	
 
 	db.close()
 
-	return orders
+	return result
 
 def get_bakeries(user_id : int):
 	db = SessionLocal()
@@ -274,10 +287,24 @@ def get_incoming_orders(current_user: dict = Depends(get_current_user)):
 		raise HTTPException(status_code = 403)
 
 	orders = db.query(Order).join(Bakery).filter(Bakery.owner_id == current_user["user_id"]).all()
+	
+	result = []
+
+	for order in orders:
+		result.append({
+		"order_id":order.id,
+		"customer":order.customer.username,
+		"bakery":order.bakery.name,
+		"menu_item":order.menu_item.name,
+		"quantity":order.quantity,
+		"status":order.status,
+		"created_at":order.created_at,
+		"price_at_order":order.price_at_order,
+		"total_price":order.price_at_order * order.quantity})
 
 	db.close()
 
-	return orders
+	return result
 
 @app.post("/bakery")
 def create_bakery(bakery: BakeryCreate, current_user: dict = Depends(get_current_user)):

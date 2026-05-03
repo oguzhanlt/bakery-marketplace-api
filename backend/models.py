@@ -40,7 +40,7 @@ class Order(Base):
 	bakery_id = Column(Integer, ForeignKey("bakeries.id"), nullable=False)#bakery received
 	created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 	status = Column(Enum(OrderStatus), nullable=False, default=OrderStatus.pending)
-
+	price_at_order = Column(Integer, nullable=False)
 	customer = relationship("User", back_populates="customer_orders",foreign_keys=[user_id])
 
 	bakery  = relationship("Bakery", back_populates="orders")
