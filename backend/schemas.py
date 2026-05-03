@@ -9,8 +9,9 @@ class UserCreate(BaseModel):
 	role: UserRole	
 
 class OrderCreate(BaseModel):
-	item_name: str
 	bakery_id: int
+	menu_item_id: int
+	quantity: int
 
 class UserLogin(BaseModel):
 	email: str
@@ -27,7 +28,7 @@ class BakeryCreate(BaseModel):
 	location: str
 
 
-class MenuItemCreate(BaseModel:
+class MenuItemCreate(BaseModel):
 	bakery_id: int
 	name: str
 	description: str

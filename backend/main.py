@@ -140,7 +140,23 @@ def update_user(user_id: int, updated_user: UserCreate):
 def create_order(order: OrderCreate, current_user: dict = Depends(get_current_user)):
 	db = SessionLocal()
 	
-	new_order = Order(item_name=order.item_name, user_id=current_user["user_id"], bakery_id = order.bakery_id)
+	bakery = db.query(Bakery).filter(Bakery.id == order.bakery_id).first()
+	
+	if order.quantity < 1 :
+		db.close()
+		raise HTTPException(status_code=403)
+
+	if not bakery:
+		db.close()
+		raise HTTPException(status_code=404, detail="Bakery not found")	
+	
+	menu_item = db.query(MenuItem).filter(MenuItem.id==order.menu_item_id, MenuItem.bakery_id==order.bakery_id).first()
+
+	if not menu_item:
+		db.close()
+		raise HTTPException(status_code = 404, detail = "Menu item not found")
+
+	new_order = Order(menu_item_id=menu_item.id, user_id=current_user["user_id"], bakery_id = order.bakery_id, quantity=order.quantity)
 	
 	db.add(new_order)
 	db.commit()
@@ -148,16 +164,14 @@ def create_order(order: OrderCreate, current_user: dict = Depends(get_current_us
 	db.close()
 	return new_order
 
-
-@app.get("/users/{user_id}/orders")
-def get_user_orders(user_id: int):
-	db= SessionLocal()
-
-	orders = db.query(Order).filter(Order.user_id == user_id).all()
+@app.get("/bakeries/{bakery_id}/menu-items")
+def get_menu_items(bakery_id: int):
+	db = SessionLocal()
+	
+	items = db.query(MenuItem).filter(MenuItem.bakery_id == bakery_id).all()
 
 	db.close()
-
-	return orders
+	return items
 
 @app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -187,6 +201,7 @@ def get_my_orders(current_user: dict = Depends(get_current_user)):
 	db = SessionLocal()
 	
 	if current_user["role"] != "customer":
+		db.close()
 		raise HTTPException(status_code=403)
 
 	orders = db.query(Order).filter(Order.user_id == current_user["user_id"]).all()
@@ -195,28 +210,29 @@ def get_my_orders(current_user: dict = Depends(get_current_user)):
 
 	return orders
 
-def get_bakeries(user_id : Int):
-	db = LocalSession()
+def get_bakeries(user_id : int):
+	db = SessionLocal()
 
-	bakeries = db.query(Bakery).filter(Bakery.user_id == user_id).all()
+	bakeries = db.query(Bakery).filter(Bakery.owner_id == user_id).all()
 	db.close()
 	return bakeries
 
 @app.post("/menu-items")
-def create_menu_item(current_user: dict = Depends(get_current_user), menuitem: MenuItemCreate):
-	db = SessionLocal
+def create_menu_item(menuitem: MenuItemCreate, current_user: dict = Depends(get_current_user)):
+	db = SessionLocal()
 	
 	if current_user["role"]!= "bakery_owner":
 		db.close()
-		raise HTTPException(status_code=403
+		raise HTTPException(status_code=403)
 
-	if menuitem.bakery_id not in get_bakeries(current_user["user_id"]):
+	user_bakeries = get_bakeries(current_user["user_id"])
+	if menuitem.bakery_id not in [b.id for b in user_bakeries]:
 		db.close()
 		raise HTTPException(status_code=403, detail="Not your bakery")
 
-	new_menuitem = MenuItem(name=menuitem.name, description = menuitem.description, price=menuitem.price)
+	new_menuitem = MenuItem(bakery_id=menuitem.bakery_id, name=menuitem.name, description = menuitem.description, price=menuitem.price)
 
-	db.add((new_menuitem)
+	db.add(new_menuitem)
 	db.commit()
 	db.refresh(new_menuitem)
 	db.close()
@@ -254,6 +270,7 @@ def get_incoming_orders(current_user: dict = Depends(get_current_user)):
 	db = SessionLocal()
 
 	if current_user["role"] != "bakery_owner":
+		db.close()
 		raise HTTPException(status_code = 403)
 
 	orders = db.query(Order).join(Bakery).filter(Bakery.owner_id == current_user["user_id"]).all()

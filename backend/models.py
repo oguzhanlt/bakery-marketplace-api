@@ -34,7 +34,8 @@ class Order(Base):
 	__tablename__ = "orders"
 
 	id = Column(Integer, primary_key=True, index=True)
-	item_name = Column(String, nullable=False)
+	menu_item_id = Column(Integer, ForeignKey("menu_items.id"))
+	quantity = Column(Integer)
 	user_id = Column(Integer, ForeignKey("users.id"), nullable=False)#customer ordered
 	bakery_id = Column(Integer, ForeignKey("bakeries.id"), nullable=False)#bakery received
 	created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
@@ -43,6 +44,7 @@ class Order(Base):
 	customer = relationship("User", back_populates="customer_orders",foreign_keys=[user_id])
 
 	bakery  = relationship("Bakery", back_populates="orders")
+	menu_item = relationship("MenuItem")
 
 class Bakery(Base):
 	__tablename__ = "bakeries"
@@ -65,7 +67,7 @@ class MenuItem(Base):
 	id = Column(Integer, primary_key=True, index=True)
 	bakery_id = Column(Integer, ForeignKey("bakeries.id"), nullable=False)
 	name = Column(String, nullable=False)
-	description= Column(String
+	description= Column(String)
 	price=Column(Integer, nullable=False)
 
 	bakery = relationship("Bakery", back_populates="menu_items")
