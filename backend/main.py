@@ -233,6 +233,15 @@ def get_my_orders(current_user: dict = Depends(get_current_user)):
 
 	return result
 
+@app.get("/bakeries")
+def get_all_bakeries():
+	db = SessionLocal()
+
+	bakeries = db.query(Bakery).all()
+	db.close()
+	return bakeries
+
+@app.get("/bakeries-of-{user_id}")
 def get_bakeries(user_id : int):
 	db = SessionLocal()
 
