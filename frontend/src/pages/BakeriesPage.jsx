@@ -8,10 +8,20 @@ function BakeriesPage() {
   const [bakeries, setBakeries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    getBakeries();
-  }, []);
+      if (!token) {
+        navigate("/");
+      } else {
+        getBakeries();
+      }
+    }, [token, navigate]);
+  
+    if (!token) {
+      return null;
+    }
+  
 
   async function getBakeries() {
     setLoading(true);

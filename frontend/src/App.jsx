@@ -3,6 +3,7 @@ import {BrowserRouter, Routes, Route} from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import BakeriesPage from "./pages/BakeriesPage";
+import BakeryMenuPage from "./pages/BakeryMenuPage";
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
       <Route path="/" element={<LoginPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/bakeries" element={<BakeriesPage />} />
+      <Route path="/bakeries/:bakery_id" element={<BakeryMenuPage />} />
     </Routes>
   </BrowserRouter>
   );
