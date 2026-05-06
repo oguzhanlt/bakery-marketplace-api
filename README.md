@@ -38,7 +38,3 @@ Backend API for a bakery marketplace platform where customers can place orders a
 - Update order status
 - Manage bakery workflow
 
-## Order Status Flow
-
-```text
-pending → accepted → preparing → ready → completed
