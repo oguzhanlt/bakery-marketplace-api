@@ -72,8 +72,8 @@ def home():
 	return {"message": "backend running"}
 
 
-@app.post("/users")
-def create_user(user: UserCreate):
+@app.post("/register")
+def register(user: UserCreate):
 	db = SessionLocal()
 	existing_user = db.query(User).filter(User.email == user.email).first()
 	if existing_user:

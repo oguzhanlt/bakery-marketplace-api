@@ -88,6 +88,36 @@ function LoginPage() {
           login
         </button>
 
+        <button 
+          type="button"
+          style={{
+            padding: "5px 10px",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+            fontSize: "16px",
+            fontWeight: "bold",
+            transition: "transform 0.1s",
+          }}
+          onMouseDown={() => {
+            document.getElementById("register-button").style.transform = "scale(0.95)";
+          }}
+          onMouseUp={() => {
+            const btn = document.getElementById("register-button");
+            btn.style.transition = "transform 0.2s ease-out";
+            btn.style.transform = "scale(1.05)";
+            setTimeout(() => {
+              btn.style.transform = "scale(1)";
+              navigate("/register");
+            }, 200);
+          }}
+          id="register-button"
+        >
+          register
+        </button>
+
         <p>{message}</p>
       </form>
     </div>
