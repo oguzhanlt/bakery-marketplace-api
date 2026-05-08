@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function LoginPage() {
@@ -39,13 +39,23 @@ function LoginPage() {
 
   return (
     <div style={{ padding: "40px" }}>
+      <br /><br />
       <h1>BakeUp</h1>
-
+      <br /><br />
+      <br /><br />
+      <br /><br />
       <form onSubmit={handleLogin}>
         <input
           placeholder="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          style ={{
+            padding: "5px",
+            border: "1px solid #26c47aff",
+            borderRadius: "4px",
+            fontSize: "16px",
+            width: "200px",
+          }}
         />
 
         <br /><br />
@@ -55,6 +65,13 @@ function LoginPage() {
           placeholder="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          style ={{
+            padding: "5px",
+            border: "1px solid #26c47aff",
+            borderRadius: "4px",
+            fontSize: "16px",
+            width: "200px",
+          }}
         />
 
         <br /><br />
@@ -88,7 +105,12 @@ function LoginPage() {
           login
         </button>
 
-        <button 
+        <p>{message}</p>
+        <br /><br />
+        <p>No Account Yet?</p>
+      </form>
+
+      <button 
           type="button"
           style={{
             padding: "5px 10px",
@@ -117,9 +139,6 @@ function LoginPage() {
         >
           register
         </button>
-
-        <p>{message}</p>
-      </form>
     </div>
   )
 
