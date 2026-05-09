@@ -9,6 +9,8 @@ function BakeryMenuPage() {
   const bakery_id = params.bakery_id 
   const [menuItems, setMenuItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [orderMessage, setOrderMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const token = localStorage.getItem("token");
@@ -53,7 +55,47 @@ function BakeryMenuPage() {
     }
   }
 
+  async function handleOrder() {
+    if (!selectedItem) {
+      setOrderMessage("Please select a menu item to order.");
+      return;
+    }
+    
+    if (quantity < 1) {
+      setOrderMessage("Quantity must be at least 1.");
+      return;
+    }
+    console.log("Ordering item:", selectedItem);
+    console.log("id of item:", selectedItem.id);
 
+    try {
+      const response = await fetch("http://127.0.0.1:8000/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          bakery_id: bakery_id,
+          menu_item_id: selectedItem.id,
+          quantity: quantity,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Order response:", data);
+        setOrderMessage("Order placed successfully!");
+      } else {
+        setOrderMessage(data.detail || "Unknown error");
+      }
+    } catch (error) {
+      console.error(error);
+      setOrderMessage("Failed to place order");
+      navigate("/dashboard");
+    }
+  }
 
 return (
     <div style={{ padding: "40px" }}>
@@ -101,9 +143,25 @@ return (
                 <p><strong>Description:</strong> {selectedItem.description}</p>
                 <p><strong>Price:</strong> ${selectedItem.price}</p>
 
-                <button type="button" style={{ padding: "10px 15px", backgroundColor: "#ffc107", color: "#000", border: "none", borderRadius: "5px", cursor: "pointer" }}>
+                <label>
+                    Quantity: {" "}
+                    <input
+                        type="number"
+                        min="1"
+                        value={quantity}
+                        onChange={(e) => setQuantity(Number(e.target.value))}
+                        style={{ width: "60px", padding: "5px" }}
+                    />
+                </label>
+
+                <br />
+                <br />
+
+                <button type="button" onClick={handleOrder} style={{ padding: "10px 15px", backgroundColor: "#ffc107", color: "#000", border: "none", borderRadius: "5px", cursor: "pointer" }}>
                     Order
                 </button>
+
+                <p style={{ marginTop: "10px" }}>{orderMessage}</p>
             </div>
         )}
     </div>
