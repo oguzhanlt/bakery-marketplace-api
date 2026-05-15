@@ -57,6 +57,13 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 		raise HTTPException(status_code=401, detail="Invalid token")
 
 
+def required_role(required_role: str):
+	def role_checker(current_user: dict = Depends(get_current_user)):
+		if current_user["role"] != required_role:
+			raise HTTPException(status_code=403, detail="You do not have permission.")
+		return current_user
+	return role_checker
+
 @app.get("/me")
 def read_me(current_user: dict = Depends(get_current_user)):
 	db = SessionLocal()
@@ -147,7 +154,7 @@ def update_user(user_id: int, updated_user: UserCreate):
 
 
 @app.post("/orders")
-def create_order(order: OrderCreate, current_user: dict = Depends(get_current_user)):
+def create_order(order: OrderCreate, current_user: dict = Depends(required_role("customer"))):
 	db = SessionLocal()
 	
 	bakery = db.query(Bakery).filter(Bakery.id == order.bakery_id).first()
@@ -202,17 +209,14 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 	return {
 		"access_token":access_token,
-		"token_type": "bearer"
+		"token_type": "bearer",
+		"role": user.role
 	}
 
 
 @app.get("/my-orders")
-def get_my_orders(current_user: dict = Depends(get_current_user)):
+def get_my_orders(current_user: dict = Depends(required_role("customer"))):
 	db = SessionLocal()
-	
-	if current_user["role"] != "customer":
-		db.close()
-		raise HTTPException(status_code=403)
 
 	orders = db.query(Order).filter(Order.user_id == current_user["user_id"]).all()
 	
@@ -249,13 +253,9 @@ def get_bakeries(user_id : int):
 	db.close()
 	return bakeries
 
-@app.post("/menu-items")
-def create_menu_item(menuitem: MenuItemCreate, current_user: dict = Depends(get_current_user)):
+@app.post("/manage-menu")
+def add_menu_item(menuitem: MenuItemCreate, current_user: dict = Depends(required_role("bakery_owner"))):
 	db = SessionLocal()
-	
-	if current_user["role"]!= "bakery_owner":
-		db.close()
-		raise HTTPException(status_code=403)
 
 	user_bakeries = get_bakeries(current_user["user_id"])
 	if menuitem.bakery_id not in [b.id for b in user_bakeries]:
@@ -271,21 +271,61 @@ def create_menu_item(menuitem: MenuItemCreate, current_user: dict = Depends(get_
 	
 	return new_menuitem
 
-
-@app.put("/orders/{order_id}/status")
-def update_order_status(order_id: int, status_update: OrderStatusUpdate, current_user: dict= Depends(get_current_user)):
+@app.delete("/manage-menu")
+def delete_menu_item(menu_item_id: int, current_user: dict = Depends(required_role("bakery_owner"))):
 	db = SessionLocal()
 
-	if current_user["role"] != "bakery_owner":
+	menu_item = db.query(MenuItem).filter(MenuItem.id == menu_item_id).first()
+
+	if not menu_item:
 		db.close()
-		raise HTTPException(status_code=403)
+		raise HTTPException(status_code=404, detail="Menu item not found")
+
+	if menu_item.bakery.owner_id != current_user["user_id"]:
+		db.close()
+		raise HTTPException(status_code=403, detail="Not your bakery")
+
+	db.delete(menu_item)
+	db.commit()
+	db.close()
+
+	return {"message": "Menu item deleted"}
+
+@app.patch("/manage-menu")
+def update_menu_item(menu_item_id: int, updated_item: MenuItemCreate, current_user: dict = Depends(required_role("bakery_owner"))):
+	db = SessionLocal()
+
+	menu_item = db.query(MenuItem).filter(MenuItem.id == menu_item_id).first()
+
+	if not menu_item:
+		db.close()
+		raise HTTPException(status_code=404, detail="Menu item not found")
+
+	if menu_item.bakery.owner_id != current_user["user_id"]:
+		db.close()
+		raise HTTPException(status_code=403, detail="Not your bakery")
+
+	menu_item.name = updated_item.name
+	menu_item.description = updated_item.description
+	menu_item.price = updated_item.price
+
+	db.commit()
+	db.refresh(menu_item)
+	db.close()
+
+	return menu_item
+
+
+@app.patch("/orders/{order_id}/status")
+def update_order_status(order_id: int, status_update: OrderStatusUpdate, current_user: dict= Depends(required_role("bakery_owner"))):
+	db = SessionLocal()
 	
 	order = db.query(Order).filter(Order.id == order_id).first()
 
 	if not order:
 		db.close()
 		raise HTTPException(status_code=404, detail="Order not found")
-	if order.bakery.owner_id != current_user["user_id"]: # I would like to note that this is not a good design principle
+	if order.bakery.owner_id != current_user["user_id"]: # I would like to note that this is not a good design principle (against one dot rule)
 		db.close()
 		raise HTTPException(status_code=403, detail="Not your order")
 
@@ -298,12 +338,8 @@ def update_order_status(order_id: int, status_update: OrderStatusUpdate, current
 	return order
 
 @app.get("/incoming-orders")
-def get_incoming_orders(current_user: dict = Depends(get_current_user)):
+def get_incoming_orders(current_user: dict = Depends(required_role("bakery_owner"))):
 	db = SessionLocal()
-
-	if current_user["role"] != "bakery_owner":
-		db.close()
-		raise HTTPException(status_code = 403)
 
 	orders = db.query(Order).join(Bakery).filter(Bakery.owner_id == current_user["user_id"]).all()
 	
@@ -326,12 +362,8 @@ def get_incoming_orders(current_user: dict = Depends(get_current_user)):
 	return result
 
 @app.post("/bakery")
-def create_bakery(bakery: BakeryCreate, current_user: dict = Depends(get_current_user)):
+def create_bakery(bakery: BakeryCreate, current_user: dict = Depends(required_role("bakery_owner"))):
 	db = SessionLocal()
-
-	if current_user["role"] != "bakery_owner":
-		db.close()
-		raise HTTPException(status_code = 403)
 
 	new_bakery = Bakery(name = bakery.name, description= bakery.description,
 		 location = bakery.location, owner_id=current_user["user_id"])

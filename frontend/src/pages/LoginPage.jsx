@@ -28,12 +28,13 @@ function LoginPage() {
 
     console.log(data);
 
-    if (data.access_token) {
+    if (data.access_token && data.role) {
       localStorage.setItem("token", data.access_token);
+      localStorage.setItem("role", data.role);
       setMessage("Login successful");
       navigate("/dashboard");
     } else {
-      setMessage("Login failed");
+      setMessage("Login failed: token or role is missing");
     }
   }
 
