@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import CurrencyWidget from "../components/CurrencyWidget";
+import WeatherWidget from "../components/WeatherWidget";
 
 function DashboardPage() {
   const navigate = useNavigate();
@@ -8,6 +10,7 @@ function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const role = localStorage.getItem("role");
+  const [bakery, setBakery] = useState(null);
   console.log("role: ", role);
   useEffect(() => {
     if (!token) {
@@ -17,6 +20,7 @@ function DashboardPage() {
         getMyOrders();
       } else if (role === "bakery_owner") {
         getIncomingOrders();
+        getMyBakery();
       } else {
         setError("Invalid user role");
         setLoading(false);
@@ -27,6 +31,32 @@ function DashboardPage() {
   if (!token) {
     return null;
   }
+  
+async function getMyBakery() {
+  try {
+    const meResponse = await fetch("http://127.0.0.1:8000/me", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const me = await meResponse.json();
+
+    const bakeryResponse = await fetch(`http://127.0.0.1:8000/bakeries-of-${me.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const bakeries = await bakeryResponse.json();
+
+    if (bakeries.length > 0) {
+      setBakery(bakeries[0]);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
 
 async function getIncomingOrders() {
     setLoading(true);
@@ -112,31 +142,76 @@ async function getIncomingOrders() {
   }
 
   return (
-    <div style={{ padding: "40px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h1>{role === "customer" ? "Customer Dashboard" : "Bakery Owner Dashboard"}</h1>
-        <button type="button" onClick={handleLogout}>
-          logout
-        </button>
+    <div style={styles.page}>
+
+    <div style={styles.container}>
+
+      <div style={styles.widgetRow}>
+
+        <CurrencyWidget />
+
+        <WeatherWidget />
+
       </div>
-      
-      {role === "customer" ? (
-        <>
-          <h2>My Orders</h2>
-          <button onClick={() => navigate("/bakeries")}>
-            Browse Bakeries
-          </button>
-        </>
-      ) : role === "bakery_owner" ? (
-        <>
-          <h2>Incoming Orders</h2>
-          <button onClick={() => navigate("/manage-menu")}>
-            Manage Menu
-          </button>
-        </>
+
+      <div style={styles.header}>
+
+        <h1 style={styles.title}>
+
+          {role === "customer" ? "Customer Dashboard" : "Bakery Owner Dashboard"}
+
+        </h1>
+
+        <button type="button" onClick={handleLogout}>
+
+          logout
+
+        </button>
+
+      </div>
+
+      <div style={styles.section}>
+
+        {role === "customer" ? (
+
+          <>
+
+            <h2>My Orders</h2>
+
+            <button onClick={() => navigate("/bakeries")}>
+
+              Browse Bakeries
+
+            </button>
+
+          </>
+
+        ) : role === "bakery_owner" ? (
+
+          <>
+
+            <h2>Incoming Orders</h2>
+
+            <button
+
+              onClick={() => navigate(`/bakeries/${bakery.id}/manage-menu`)}
+
+              disabled={!bakery}
+
+            >
+
+              Manage Menu
+
+            </button>
+
+          </>
+
         ) : (
+
           <p>Invalid user role</p>
-      )}
+
+        )}
+      </div>
 
       {loading ? (
         <p>Loading orders...</p>
@@ -145,7 +220,7 @@ async function getIncomingOrders() {
       ) : orders.length === 0 ? (
         <p>No orders found.</p>
       ) : (
-        <table style={{ width: "33%", borderCollapse: "collapse", marginTop: "20px" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px" }}>
           <thead>
             <tr style={{ backgroundColor: "#7992d6ff", borderBottom: "1px solid #ddddddff" }}>
               <th style={{ padding: "4px", textAlign: "center", color: "white" }}>Menu Item</th>
@@ -175,8 +250,44 @@ async function getIncomingOrders() {
           </tbody>
         </table>
       )}
+      </div>
     </div>
   );
 }
+const styles = {
+  page: {
+    minHeight: "100vh",
+    backgroundColor: "#17181f",
+    color: "#f5f5f5",
+    padding: "40px",
+  },
 
+  container: {
+    maxWidth: "1100px",
+    margin: "0 auto",
+  },
+
+  widgetRow: {
+    display: "flex",
+    gap: "20px",
+    marginBottom: "40px",
+    justifyContent: "flex-start",
+    alignItems: "center",
+  },
+
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: "40px",
+  },
+
+  title: {
+    fontSize: "42px",
+    margin: 0,
+  },
+
+  section: {
+    marginBottom: "24px",
+  },
+};
 export default DashboardPage;

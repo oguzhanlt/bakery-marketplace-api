@@ -10,6 +10,11 @@ from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import os
+import requests
+
+load_dotenv()
 
 app = FastAPI()
 app.add_middleware(
@@ -23,7 +28,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-SECRET_KEY = "mysecretkey"
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
+WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -181,9 +187,16 @@ def create_order(order: OrderCreate, current_user: dict = Depends(required_role(
 	db.close()
 	return new_order
 
-@app.get("/bakeries/{bakery_id}/menu-items")
-def get_menu_items(bakery_id: int):
+@app.get("/bakeries/{bakery_id}/manage-menu")
+def get_menu_items(bakery_id: int, current_user: dict = Depends(required_role("bakery_owner"))):
 	db = SessionLocal()
+	bakery = db.query(Bakery).filter(Bakery.id == bakery_id).first()
+	if not bakery:
+		db.close()
+		raise HTTPException(status_code=404, detail="Bakery not found")
+	if bakery.owner_id != current_user["user_id"]:
+		db.close()
+		raise HTTPException(status_code=403, detail="Not your bakery")
 	
 	items = db.query(MenuItem).filter(MenuItem.bakery_id == bakery_id).all()
 
@@ -374,6 +387,62 @@ def create_bakery(bakery: BakeryCreate, current_user: dict = Depends(required_ro
 	db.close()	
 	
 	return new_bakery
-	
-	
-	
+
+@app.get("/external/weather")
+def get_weather(lat: float, lon: float):
+    if not WEATHER_API_KEY:
+        raise HTTPException(status_code=500, detail="Weather API key is not configured")
+    try:
+        url = (
+            f"https://api.openweathermap.org/data/2.5/weather"
+            f"?lat={lat}&lon={lon}&appid={WEATHER_API_KEY}&units=metric"
+        )
+
+        response = requests.get(url, timeout=10)
+        data = response.json()
+
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=data
+            )
+
+        return {
+            "city": data["name"],
+            "temperature": data["main"]["temp"],
+            "weather": data["weather"][0]["description"],
+            "humidity": data["main"]["humidity"]
+        }
+
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Weather API request failed: {str(e)}"
+        )
+
+# Currency rates endpoint
+@app.get("/external/currency")
+def get_currency_rate():
+    try:
+        url = "https://api.frankfurter.app/latest?from=EUR&to=USD,TRY"
+        response = requests.get(url, timeout=10)
+        data = response.json()
+
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=data
+            )
+
+        return {
+            "base": data["base"],
+            "date": data["date"],
+            "usd": data["rates"]["USD"],
+            "try": data["rates"]["TRY"]
+        }
+
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Currency API request failed: {str(e)}"
+        )
