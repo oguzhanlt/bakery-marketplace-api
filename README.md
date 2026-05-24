@@ -1,7 +1,19 @@
-# Bakery Marketplace API
+# 🥐 Bakery Marketplace API
 
-Backend API for a bakery marketplace platform where customers can place orders and bakery owners can manage incoming requests.
+A full-stack marketplace platform where customers can browse 
+and order from local bakeries — and bakery owners can manage 
+their incoming orders in real time.
 
+Built with FastAPI (Python) on the backend and React on the 
+frontend. Designed with role-based access so customers and 
+bakery owners each have their own experience.
+
+## Tech Stack
+- **Backend:** Python · FastAPI · SQLAlchemy · PostgreSQL
+- **Frontend:** React · JavaScript · CSS
+- **Auth:** JWT Authentication · Role-Based Access Control (RBAC)
+- **Tools:** Git · Passlib / bcrypt
+- 
 ## Features
 
 - User registration & login
@@ -14,15 +26,6 @@ Backend API for a bakery marketplace platform where customers can place orders a
 - PostgreSQL database
 - SQLAlchemy ORM
 - Protected routes
-
-## Tech Stack
-
-- Python
-- FastAPI
-- PostgreSQL
-- SQLAlchemy
-- JWT Authentication
-- Passlib / bcrypt
 
 ## Roles
 
