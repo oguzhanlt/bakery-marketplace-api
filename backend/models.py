@@ -1,9 +1,9 @@
 import enum
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Enum
-from .database import Base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime, timezone
 
+Base = declarative_base()
 
 class UserRole(enum.Enum):
 	customer = "customer"
