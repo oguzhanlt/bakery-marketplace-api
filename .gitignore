@@ -7,6 +7,12 @@ venv/
 .venv/
 env/
 
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+test.db
+
 # Environment variables
 .env
 

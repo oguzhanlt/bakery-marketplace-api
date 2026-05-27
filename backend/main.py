@@ -5,7 +5,7 @@ from .schemas import UserCreate, OrderCreate, UserLogin, OrderStatusUpdate, Bake
 from .models import User, Order, Bakery, MenuItem
 from passlib.context import CryptContext
 from jose import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
@@ -46,7 +46,7 @@ def get_db():
 def create_access_token(data: dict):
 	to_encode = data.copy()
 
-	expire = datetime.utcnow() + timedelta(minutes= ACCESS_TOKEN_EXPIRE_MINUTES)
+	expire = datetime.now(timezone.utc) + timedelta(minutes= ACCESS_TOKEN_EXPIRE_MINUTES)
 	to_encode.update({"exp": expire})
 	
 	encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -60,8 +60,8 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 		user_id = payload.get("user_id")
 		user_role = payload.get("role")		
 
-		if user_email is None:
-			raise HTTPException(status_code=401, detail="Invalid token")
+		#if user_email is None:
+		#	raise HTTPException(status_code=401, detail="Invalid token") # already covered by pydantic BaseModel validation
 
 		return {"email": user_email, "user_id":user_id, "role": user_role}
 
