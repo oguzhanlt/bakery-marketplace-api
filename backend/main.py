@@ -93,7 +93,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 	existing_user = db.query(User).filter(User.email == user.email).first()
 	if existing_user:
 		db.close()
-		return {"message": "this email already exists"}
+		raise HTTPException(status_code=400, detail="Email already registered")
 	
 	new_user = User(	
 		username=user.username,
