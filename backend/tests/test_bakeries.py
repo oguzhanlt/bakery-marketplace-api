@@ -158,11 +158,29 @@ def test_create_bakery_as_customer_forbidden():
     assert response1.status_code == 200
     assert response2.status_code == 403
 
-def test_add_menu_item():
-    pass
+def test_create_bakery_unauthorized():
+    response = client.post(
+        "/bakery",
+        json={
+            "name": "Test Bakery",
+            "description": "A test bakery",
+            "location": "Test Location"
+        }
+    )
 
-def test_place_order():
-    pass
+    assert response.status_code == 401
 
-def test_get_orders_for_bakery():
-    pass
+def test_create_bakery_invalid_token():
+    response = client.post(
+        "/bakery",
+        json={
+            "name": "Test Bakery",
+            "description": "A test bakery",
+            "location": "Test Location"
+        },
+        headers={
+            "Authorization": f"some invalidtoken"
+        }
+    )
+
+    assert response.status_code == 401
