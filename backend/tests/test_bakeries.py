@@ -184,3 +184,48 @@ def test_create_bakery_invalid_token():
     )
 
     assert response.status_code == 401
+
+def test_create_bakery_no_token():
+    response = client.post(
+        "/bakery",
+        json={
+            "name": "Test Bakery",
+            "description": "A test bakery",
+            "location": "Test Location"
+        }
+    )
+
+    assert response.status_code == 401
+
+def test_create_bakery_expired_token():
+    pass
+
+def test_create_bakery_invalid_role():
+    response = client.post(
+        "/register",
+        json={
+            "username": "testuser",
+            "email": "test123@test.com",
+            "password": "123456",
+            "role": "customer"
+        }
+    )
+    response1 = client.post("/login", data={
+        "username": "test123@test.com",
+        "password": "123456"
+    })
+    token = response1.json()["access_token"]
+    response2 = client.post(
+        "/bakery",
+        json={
+            "name": "Test Bakery",
+            "description": "A test bakery",
+            "location": "Test Location"
+        },
+        headers={
+            "Authorization": f"Bearer {token}"
+        })
+    
+    assert response.status_code == 200
+    assert response1.status_code == 200
+    assert response2.status_code == 403
