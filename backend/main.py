@@ -119,18 +119,22 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 
 	user = db.query(User).filter(User.id == user_id).first()
 
+	if not user:
+		raise HTTPException(status_code=404, detail="User not found")
+
 	return user
 
 @app.delete("/users/{user_id}")
 def delete_user(user_id : int, db: Session = Depends(get_db)):
 
 	user = db.query(User).filter(User.id == user_id).first()
-	if user:
-		db.delete(user)
-		db.commit()
-		return {"message": "user deleted"}
-
-	return {"message": "user not found"}
+	if not user:
+		raise HTTPException(status_code=404, detail="User not found")
+	
+	db.delete(user)
+	db.commit()
+	
+	return {"message": "user deleted"}
 
 @app.put("/users/{user_id}")
 def update_user(user_id: int, updated_user: UserCreate):
@@ -138,15 +142,15 @@ def update_user(user_id: int, updated_user: UserCreate):
 
 	user = db.query(User).filter(User.id == user_id).first()
 
-	if user:
-		user.username = updated_user.username
-		user.email = updated_user.email
-		
-		db.commit()
-		db.refresh(user)
-		return user
+	if not user:
+		raise HTTPException(status_code=404, detail="User not found")
+
+	user.username = updated_user.username
+	user.email = updated_user.email
 	
-	return {"message": "user not found"}
+	db.commit()
+	db.refresh(user)
+	return user
 
 
 @app.post("/orders")

@@ -1,53 +1,11 @@
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from backend.models import Bakery
 
-from ..main import app, get_db
-from ..models import User, Base, Bakery
-
-
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
-
-TestingSessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
-
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_db] = override_get_db
-
-client = TestClient(app)
-
-
-@pytest.fixture(autouse=True)
-def reset_test_db():
-    Base.metadata.drop_all(bind=engine)
-    #print(Base.metadata.tables.keys())
-    Base.metadata.create_all(bind=engine)
-    yield
-    #Base.metadata.drop_all(bind=engine)
-
-
-def test_home():
+def test_home(client):
     response = client.get("/")
     assert response.status_code == 200
     assert response.json() == {"message": "backend running"}
 
-def test_get_all_bakeries():
+def test_get_all_bakeries(client, db):
     response0 = client.post(
         "/register",
         json={
@@ -78,10 +36,8 @@ def test_get_all_bakeries():
     )
 
     response = client.get("/bakeries")
-    db = TestingSessionLocal()
     bakeries = db.query(Bakery).all()
     db.close()
-
     assert response0.status_code == 200
     assert response1.status_code == 200
     assert response2.status_code == 200
@@ -89,7 +45,7 @@ def test_get_all_bakeries():
     #print([(bakery.name, bakery.description, bakery.location) for bakery in bakeries])
     assert len(bakeries) == 1
 
-def test_create_bakery_as_owner():
+def test_create_bakery_as_owner(client):
     response0 = client.post(
         "/register",
         json={
@@ -124,7 +80,7 @@ def test_create_bakery_as_owner():
     assert response2.status_code == 200
 
 
-def test_create_bakery_as_customer_forbidden():
+def test_create_bakery_as_customer_forbidden(client):
     response0 = client.post(
         "/register",
         json={
@@ -158,7 +114,7 @@ def test_create_bakery_as_customer_forbidden():
     assert response1.status_code == 200
     assert response2.status_code == 403
 
-def test_create_bakery_unauthorized():
+def test_create_bakery_unauthorized(client):
     response = client.post(
         "/bakery",
         json={
@@ -170,7 +126,7 @@ def test_create_bakery_unauthorized():
 
     assert response.status_code == 401
 
-def test_create_bakery_invalid_token():
+def test_create_bakery_invalid_token(client):
     response = client.post(
         "/bakery",
         json={
@@ -185,7 +141,7 @@ def test_create_bakery_invalid_token():
 
     assert response.status_code == 401
 
-def test_create_bakery_no_token():
+def test_create_bakery_no_token(client):
     response = client.post(
         "/bakery",
         json={
@@ -197,10 +153,10 @@ def test_create_bakery_no_token():
 
     assert response.status_code == 401
 
-def test_create_bakery_expired_token():
+def test_create_bakery_expired_token(client):
     pass
 
-def test_create_bakery_invalid_role():
+def test_create_bakery_invalid_role(client):
     response = client.post(
         "/register",
         json={
