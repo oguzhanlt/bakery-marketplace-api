@@ -133,7 +133,7 @@ def delete_user(user_id : int, db: Session = Depends(get_db)):
 	
 	db.delete(user)
 	db.commit()
-	
+
 	return {"message": "user deleted"}
 
 @app.put("/users/{user_id}")
@@ -159,7 +159,7 @@ def create_order(order: OrderCreate, current_user: dict = Depends(required_role(
 	bakery = db.query(Bakery).filter(Bakery.id == order.bakery_id).first()
 	
 	if order.quantity < 1 :
-		raise HTTPException(status_code=403)
+		raise HTTPException(status_code=400, detail="Quantity must be at least 1")
 
 	if not bakery:
 		raise HTTPException(status_code=404, detail="Bakery not found")	

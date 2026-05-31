@@ -11,7 +11,7 @@ def test_get_all_users(client):
     )
 
     response = client.get("/users")
-    print("this is from get_all_users:", response.json())
+    # print("this is from get_all_users:", response.json())
 
     assert response1.status_code == 200
     assert response.status_code == 200
@@ -70,7 +70,7 @@ def test_update_non_existing_user(client):
             "role": "customer"
         }
     )
-    print("this is from update_non_existing_user:", response.json())
+    # print("this is from update_non_existing_user:", response.json())
     assert response.status_code == 404
 
 def test_delete_existing_user(client):
