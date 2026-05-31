@@ -44,7 +44,6 @@ bakery owners each have their own experience.
 ### Class Diagram
 
 <div align="center">
-  <img width="750" alt="Class Diagram" src="https://github.com/user-attachments/assets/33f73878-d990-4a01-84c7-0cde9dd727dd" />
+  <img width="750" alt="Class Diagram" src="https://github.com/user-attachments/assets/965d5fc7-a922-4361-b31e-ea7557493c14" />
 </div>
-
 
