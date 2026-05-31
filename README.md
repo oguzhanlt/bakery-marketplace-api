@@ -41,3 +41,8 @@ bakery owners each have their own experience.
 - Update order status
 - Manage bakery workflow
 
+### Class Diagram
+
+<img width="1870" height="2017" alt="image" src="https://github.com/user-attachments/assets/33f73878-d990-4a01-84c7-0cde9dd727dd" />
+
+
