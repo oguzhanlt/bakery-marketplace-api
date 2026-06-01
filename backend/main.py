@@ -279,6 +279,9 @@ def update_menu_item(menu_item_id: int, updated_item: MenuItemCreate, current_us
 
 	if menu_item.bakery.owner_id != current_user["user_id"]:
 		raise HTTPException(status_code=403, detail="Not your bakery")
+	
+	if updated_item.price < 1:
+		raise HTTPException(status_code=400, detail="Price must be at least 1")
 
 	menu_item.name = updated_item.name
 	menu_item.description = updated_item.description
