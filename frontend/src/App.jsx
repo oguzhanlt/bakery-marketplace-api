@@ -15,7 +15,7 @@ function App() {
       <Route path="/" element={<LoginPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/bakeries" element={<BakeriesPage />} />
-      <Route path="/bakeries/:bakery_id" element={<BakeryMenuPage />} />
+      <Route path="/bakeries/:bakery_id/menu-items" element={<BakeryMenuPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/bakeries/:bakery_id/manage-menu" element={<ManageMenu />} />
     </Routes>

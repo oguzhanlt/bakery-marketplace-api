@@ -188,6 +188,17 @@ def get_menu_items(bakery_id: int, current_user: dict = Depends(required_role("b
 
 	return items
 
+@app.get("/bakeries/{bakery_id}/menu-items")
+def get_public_menu_items(bakery_id: int, db: Session = Depends(get_db)):
+    bakery = db.query(Bakery).filter(Bakery.id == bakery_id).first()
+
+    if not bakery:
+        raise HTTPException(status_code=404, detail="Bakery not found")
+
+    items = db.query(MenuItem).filter(MenuItem.bakery_id == bakery_id).all()
+
+    return items
+
 @app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
 	user = db.query(User).filter(User.email == form_data.username).first()
@@ -291,7 +302,6 @@ def update_menu_item(menu_item_id: int, updated_item: MenuItemCreate, current_us
 	db.refresh(menu_item)
 
 	return menu_item
-
 
 @app.patch("/orders/{order_id}/status")
 def update_order_status(order_id: int, status_update: OrderStatusUpdate, current_user: dict= Depends(required_role("bakery_owner")), db: Session = Depends(get_db)):

@@ -11,6 +11,11 @@ function DashboardPage() {
   const [error, setError] = useState("");
   const role = localStorage.getItem("role");
   const [bakery, setBakery] = useState(null);
+  const [bakeryForm, setBakeryForm] = useState({
+    name: "",
+    description: "",
+    location: "",
+  });
   console.log("role: ", role);
   useEffect(() => {
     if (!token) {
@@ -40,6 +45,10 @@ async function getMyBakery() {
       },
     });
 
+    if (!meResponse.ok) {
+      throw new Error("Could not load current user.");
+    }
+
     const me = await meResponse.json();
 
     const bakeryResponse = await fetch(`http://127.0.0.1:8000/bakeries-of-${me.id}`, {
@@ -48,13 +57,51 @@ async function getMyBakery() {
       },
     });
 
+    if (!bakeryResponse.ok) {
+      throw new Error("Could not load bakery.");
+    }
+
     const bakeries = await bakeryResponse.json();
 
     if (bakeries.length > 0) {
       setBakery(bakeries[0]);
+    } else {
+      setBakery(null);
     }
   } catch (error) {
     console.error(error);
+    setError("Could not load bakery information");
+  }
+}
+
+async function createBakery(event) {
+  event.preventDefault();
+  setError("");
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/bakery", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(bakeryForm),
+    });
+
+    if (!response.ok) {
+      throw new Error("Could not create bakery.");
+    }
+
+    const createdBakery = await response.json();
+    setBakery(createdBakery);
+    setBakeryForm({
+      name: "",
+      description: "",
+      location: "",
+    });
+  } catch (error) {
+    console.error(error);
+    setError("Could not create bakery");
   }
 }
 
@@ -190,22 +237,70 @@ async function getIncomingOrders() {
 
           <>
 
-            <h2>Incoming Orders</h2>
+            {!bakery ? (
 
-            <button
+              <div style={styles.createBakeryBox}>
 
-              onClick={() => navigate(`/bakeries/${bakery.id}/manage-menu`)}
+                <h2>Create Your Bakery</h2>
 
-              disabled={!bakery}
+                <p>You need to create a bakery before you can manage menu items or receive orders.</p>
 
-            >
+                <form onSubmit={createBakery} style={styles.form}>
 
-              Manage Menu
+                  <input
+                    type="text"
+                    placeholder="Bakery name"
+                    value={bakeryForm.name}
+                    onChange={(event) => setBakeryForm({ ...bakeryForm, name: event.target.value })}
+                    required
+                    style={styles.input}
+                  />
 
-            </button>
+                  <input
+                    type="text"
+                    placeholder="Description"
+                    value={bakeryForm.description}
+                    onChange={(event) => setBakeryForm({ ...bakeryForm, description: event.target.value })}
+                    required
+                    style={styles.input}
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Location"
+                    value={bakeryForm.location}
+                    onChange={(event) => setBakeryForm({ ...bakeryForm, location: event.target.value })}
+                    required
+                    style={styles.input}
+                  />
+
+                  <button type="submit">Create Bakery</button>
+
+                </form>
+
+              </div>
+
+            ) : (
+
+              <>
+
+                <h2>Incoming Orders</h2>
+
+                <button
+
+                  onClick={() => navigate(`/bakeries/${bakery.id}/manage-menu`)}
+
+                >
+
+                  Manage Menu
+
+                </button>
+
+              </>
+
+            )}
 
           </>
-
         ) : (
 
           <p>Invalid user role</p>
@@ -213,7 +308,9 @@ async function getIncomingOrders() {
         )}
       </div>
 
-      {loading ? (
+      {role === "bakery_owner" && !bakery ? (
+        error && <p>{error}</p>
+      ) : loading ? (
         <p>Loading orders...</p>
       ) : error ? (
         <p>{error}</p>
@@ -288,6 +385,26 @@ const styles = {
 
   section: {
     marginBottom: "24px",
+  },
+
+  createBakeryBox: {
+    maxWidth: "500px",
+    padding: "24px",
+    border: "1px solid #333",
+    borderRadius: "8px",
+    backgroundColor: "#20222c",
+  },
+
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+
+  input: {
+    padding: "10px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
   },
 };
 export default DashboardPage;

@@ -66,7 +66,7 @@ function BakeriesPage() {
                 <p>{bakery.location}</p>
                 <p>{bakery.description}</p>
 
-                <button type="button" onClick={() => navigate(`/bakeries/${bakery.id}`)}>
+                <button type="button" onClick={() => navigate(`/bakeries/${bakery.id}/menu-items`)}>
                     View Menu
                 </button>
             </li>
