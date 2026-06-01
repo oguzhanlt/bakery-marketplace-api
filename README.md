@@ -47,3 +47,8 @@ bakery owners each have their own experience.
   <img width="750" alt="Class Diagram" src="https://github.com/user-attachments/assets/965d5fc7-a922-4361-b31e-ea7557493c14" />
 </div>
 
+### Visuals from BakeUp
+
+<div align="center">
+  <img width="750" alt="bakeup_collage" src="https://github.com/user-attachments/assets/49f85878-0329-419e-80ed-6c331eee6628" />
+</div>
