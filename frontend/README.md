@@ -1,16 +1,49 @@
-# React + Vite
+# 🥐 Bakery Marketplace API
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack marketplace platform where customers can browse 
+and order from local bakeries — and bakery owners can manage 
+their incoming orders in real time.
 
-Currently, two official plugins are available:
+Built with FastAPI (Python) on the backend and React on the 
+frontend. Designed with role-based access so customers and 
+bakery owners each have their own experience.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Tech Stack
+- **Backend:** Python · FastAPI · SQLAlchemy · PostgreSQL
+- **Frontend:** React · JavaScript · CSS
+- **Auth:** JWT Authentication · Role-Based Access Control (RBAC)
+- **Tools:** Git · Passlib / bcrypt
+- 
+## Features
 
-## React Compiler
+- User registration & login
+- JWT authentication
+- Role-based access control (RBAC)
+- Customer & bakery owner accounts
+- Order creation
+- Incoming orders for bakery owners
+- Order status workflow
+- PostgreSQL database
+- SQLAlchemy ORM
+- Protected routes
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Roles
 
-## Expanding the ESLint configuration
+### Customer
+- Register/login
+- Create orders
+- View own orders
+- Track order status
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Bakery Owner
+- Register/login
+- View incoming orders
+- Update order status
+- Manage bakery workflow
+
+### Class Diagram
+
+<div align="center">
+  <img width="750" alt="Class Diagram" src="https://github.com/user-attachments/assets/965d5fc7-a922-4361-b31e-ea7557493c14" />
+</div>
+
